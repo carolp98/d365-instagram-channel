@@ -7,7 +7,7 @@ param location string = resourceGroup().location
 param appName string = 'ig-d365-relay'
 
 @description('Container image to deploy. Defaults to the public prebuilt relay image.')
-param containerImage string = 'ghcr.io/moliveirapinto/d365-instagram-channel:latest'
+param containerImage string = 'ghcr.io/carolp98/d365-instagram-channel:latest'
 
 @description('Instagram App Secret (Meta app > Settings > Basic). Used to verify webhook signatures.')
 @secure()
