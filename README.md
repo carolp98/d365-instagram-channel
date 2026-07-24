@@ -1,4 +1,4 @@
-# Instagram channel for Dynamics 365 Omnichannel
+# Instagram channel for Microsoft Dynamics 365 Omnichannel
 
 Bring **Instagram Direct messages** into **Dynamics 365 Omnichannel for Customer Service** — even though Instagram is not an officially supported channel.
 
