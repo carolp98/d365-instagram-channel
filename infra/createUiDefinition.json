@@ -215,7 +215,7 @@
             "name": "containerImage",
             "type": "Microsoft.Common.TextBox",
             "label": "Container image",
-            "defaultValue": "ghcr.io/moliveirapinto/d365-instagram-channel:latest",
+            "defaultValue": "ghcr.io/carolp98/d365-instagram-channel:latest",
             "toolTip": "The prebuilt program that runs the connector. Leave this exactly as-is unless you publish your own build.",
             "constraints": {
               "required": true
