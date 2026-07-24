@@ -27,7 +27,7 @@
     },
     "containerImage": {
       "type": "string",
-      "defaultValue": "ghcr.io/moliveirapinto/d365-instagram-channel:latest",
+      "defaultValue": "ghcr.io/carolp98/d365-instagram-channel:latest",
       "metadata": {
         "description": "Container image to deploy. Defaults to the public prebuilt relay image."
       }
