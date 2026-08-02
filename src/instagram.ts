@@ -170,6 +170,54 @@ export async function fetchProfile(config: AppConfig): Promise<InstagramProfile>
   return { userId: String(data.user_id ?? ""), username: data.username };
 }
 
+/** The Instagram profile of a user who sent a DM. */
+export interface InstagramUserProfile {
+  id: string;
+  name?: string;
+  username?: string;
+}
+
+/**
+ * Fetch the Instagram profile of the user who sent a message.
+ * Unlike fetchProfile(), this looks up the specific sender IGSID.
+ */
+export async function fetchUserProfile(
+  config: AppConfig,
+  igsid: string
+): Promise<InstagramUserProfile> {
+  const url =
+    `${config.graphBaseUrl}/${config.graphApiVersion}/${igsid}` +
+    `?fields=id,name,username`;
+
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${config.instagramAccessToken}`,
+    },
+  });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    log.warn("Instagram fetchUserProfile failed", {
+      status: res.status,
+      igsid,
+      detail,
+    });
+
+    throw new Error(`Instagram user profile lookup failed (HTTP ${res.status}).`);
+  }
+
+  const data = (await res.json()) as {
+    id?: string;
+    name?: string;
+    username?: string;
+  };
+
+  return {
+    id: String(data.id ?? igsid),
+    name: data.name,
+    username: data.username,
+  };
+}
 /** Result of exchanging a short-lived token for a long-lived one. */
 export interface LongLivedToken {
   accessToken: string;
