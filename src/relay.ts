@@ -58,12 +58,13 @@ log.info("Instagram sender profile retrieved", {
   name: profile.name,
   username: profile.username,
 });
-    
+
     await dl.sendUserMessage(
       this.config,
       link.conversationId,
       message.senderId,
-      text
+      text,
+      profile.name ?? profile.username
     );
     link.lastActivityAt = Date.now();
     this.store.set(link);
