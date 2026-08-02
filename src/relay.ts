@@ -48,6 +48,17 @@ export class Relay {
     for (const url of message.attachmentUrls) parts.push(`[attachment] ${url}`);
     const text = parts.join("\n");
 
+    const profile = await ig.fetchUserProfile(
+  this.config,
+  message.senderId
+);
+
+log.info("Instagram sender profile retrieved", {
+  igsid: message.senderId,
+  name: profile.name,
+  username: profile.username,
+});
+    
     await dl.sendUserMessage(
       this.config,
       link.conversationId,
