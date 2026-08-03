@@ -28,6 +28,8 @@ export interface ConversationLink {
   watermark?: string;
   /** Timestamp (ms) of the last inbound or outbound activity. */
   lastActivityAt: number;
+   /** The customer's Instagram display name, fetched once when the conversation starts. */
+  displayName?: string;
 }
 
 /** A Direct Line activity (subset of fields we use). */
