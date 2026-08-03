@@ -74,6 +74,12 @@ export async function sendUserMessage(
         type: "message",
         from: { id: fromId, name: fromName },
         text,
+        channelData: {
+          channeltype: "instagram",
+          customercontext: {
+            instagramid: fromId,
+          },
+        },
       }),
     }
   );
