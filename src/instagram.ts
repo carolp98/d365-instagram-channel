@@ -211,7 +211,6 @@ export async function fetchProfile(
         : `Instagram returned an error (HTTP ${res.status}).`
     );
   }
-
   const data = (await res.json()) as {
     user_id?: string;
     username?: string;
@@ -221,6 +220,40 @@ export async function fetchProfile(
     userId: String(data.user_id ?? ""),
     username: data.username,
   };
+}
+
+/** The Instagram profile of a customer who has messaged the account. */
+export interface InstagramCustomerProfile {
+  name?: string;
+  username?: string;
+}
+
+/**
+ * Look up the display name of the customer behind a given IGSID.
+ * Returns an empty object (never throws) if Instagram can't or won't return a name,
+ * so a lookup failure never breaks message delivery.
+ */
+export async function fetchUserProfile(
+  config: AppConfig,
+  igsid: string
+): Promise<InstagramCustomerProfile> {
+  const url =
+    `${config.graphBaseUrl}/${config.graphApiVersion}/${igsid}?fields=name,username`;
+
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${config.instagramAccessToken}`,
+    },
+  });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    log.warn("Instagram fetchUserProfile failed", { status: res.status, igsid, detail });
+    return {};
+  }
+
+  const data = (await res.json()) as { name?: string; username?: string };
+  return { name: data.name, username: data.username };
 }
 
 /** Result of exchanging a short-lived token for a long-lived one. */
