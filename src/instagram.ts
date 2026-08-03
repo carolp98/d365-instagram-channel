@@ -23,7 +23,9 @@ export function verifySignature(
 
   const a = Buffer.from(signatureHeader);
   const b = Buffer.from(expected);
+
   if (a.length !== b.length) return false;
+
   return crypto.timingSafeEqual(a, b);
 }
 
@@ -31,8 +33,11 @@ export function verifySignature(
  * Parse a raw Instagram webhook payload into a flat list of inbound messages.
  * Echo events (messages the page itself sent) are flagged so the relay can skip them.
  */
-export function parseWebhook(payload: unknown): InstagramInboundMessage[] {
+export function parseWebhook(
+  payload: unknown
+): InstagramInboundMessage[] {
   const out: InstagramInboundMessage[] = [];
+
   const body = payload as {
     object?: string;
     entry?: Array<{
@@ -44,29 +49,42 @@ export function parseWebhook(payload: unknown): InstagramInboundMessage[] {
           mid?: string;
           text?: string;
           is_echo?: boolean;
-          attachments?: Array<{ type?: string; payload?: { url?: string } }>;
+          attachments?: Array<{
+            type?: string;
+            payload?: { url?: string };
+          }>;
         };
       }>;
     }>;
   };
 
-  if (!body || body.object !== "instagram" || !Array.isArray(body.entry)) {
+  if (
+    !body ||
+    body.object !== "instagram" ||
+    !Array.isArray(body.entry)
+  ) {
     return out;
   }
 
   for (const entry of body.entry) {
     for (const event of entry.messaging ?? []) {
       const msg = event.message;
-      if (!msg) continue; // ignore reactions/seen/postbacks for v1
 
+      if (!msg) continue;
+
+      // ignore reactions/seen/postbacks for v1
       const attachmentUrls: string[] = [];
+
       for (const att of msg.attachments ?? []) {
-        if (att.payload?.url) attachmentUrls.push(att.payload.url);
+        if (att.payload?.url) {
+          attachmentUrls.push(att.payload.url);
+        }
       }
 
       out.push({
         senderId: event.sender?.id ?? "",
-        recipientId: event.recipient?.id ?? entry.id ?? "",
+        recipientId:
+          event.recipient?.id ?? entry.id ?? "",
         text: msg.text,
         attachmentUrls,
         messageId: msg.mid,
@@ -84,7 +102,9 @@ export async function sendText(
   recipientIgsid: string,
   text: string
 ): Promise<void> {
-  const url = `${config.graphBaseUrl}/${config.graphApiVersion}/${config.instagramAccountId}/messages`;
+  const url =
+    `${config.graphBaseUrl}/${config.graphApiVersion}/${config.instagramAccountId}/messages`;
+
   const res = await fetch(url, {
     method: "POST",
     headers: {
@@ -99,11 +119,13 @@ export async function sendText(
 
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
+
     log.error("Instagram sendText failed", {
       status: res.status,
       recipient: recipientIgsid,
       detail,
     });
+
     throw new Error(`Instagram sendText failed: ${res.status}`);
   }
 }
@@ -115,7 +137,9 @@ export async function sendAttachment(
   attachmentUrl: string,
   type: "image" | "audio" | "video" | "file" = "image"
 ): Promise<void> {
-  const url = `${config.graphBaseUrl}/${config.graphApiVersion}/${config.instagramAccountId}/messages`;
+  const url =
+    `${config.graphBaseUrl}/${config.graphApiVersion}/${config.instagramAccountId}/messages`;
+
   const res = await fetch(url, {
     method: "POST",
     headers: {
@@ -124,18 +148,29 @@ export async function sendAttachment(
     },
     body: JSON.stringify({
       recipient: { id: recipientIgsid },
-      message: { attachment: { type, payload: { url: attachmentUrl } } },
+      message: {
+        attachment: {
+          type,
+          payload: {
+            url: attachmentUrl,
+          },
+        },
+      },
     }),
   });
 
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
+
     log.error("Instagram sendAttachment failed", {
       status: res.status,
       recipient: recipientIgsid,
       detail,
     });
-    throw new Error(`Instagram sendAttachment failed: ${res.status}`);
+
+    throw new Error(
+      `Instagram sendAttachment failed: ${res.status}`
+    );
   }
 }
 
@@ -150,44 +185,11 @@ export interface InstagramProfile {
  * Used by the Setup Assistant to give the user an instant green check.
  * Throws a friendly Error when the token is wrong/expired.
  */
-export async function fetchProfile(config: AppConfig): Promise<InstagramProfile> {
-  const url = `${config.graphBaseUrl}/${config.graphApiVersion}/me?fields=user_id,username`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${config.instagramAccessToken}` },
-  });
-
-  if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    log.warn("Instagram fetchProfile failed", { status: res.status, detail });
-    throw new Error(
-      res.status === 401 || res.status === 400
-        ? "The access token was rejected by Instagram. It may be wrong or expired."
-        : `Instagram returned an error (HTTP ${res.status}).`
-    );
-  }
-
-  const data = (await res.json()) as { user_id?: string; username?: string };
-  return { userId: String(data.user_id ?? ""), username: data.username };
-}
-
-/** The Instagram profile of a user who sent a DM. */
-export interface InstagramUserProfile {
-  id: string;
-  name?: string;
-  username?: string;
-}
-
-/**
- * Fetch the Instagram profile of the user who sent a message.
- * Unlike fetchProfile(), this looks up the specific sender IGSID.
- */
-export async function fetchUserProfile(
-  config: AppConfig,
-  igsid: string
-): Promise<InstagramUserProfile> {
+export async function fetchProfile(
+  config: AppConfig
+): Promise<InstagramProfile> {
   const url =
-    `${config.graphBaseUrl}/${config.graphApiVersion}/${igsid}` +
-    `?fields=id,name,username`;
+    `${config.graphBaseUrl}/${config.graphApiVersion}/me?fields=user_id,username`;
 
   const res = await fetch(url, {
     headers: {
@@ -197,30 +199,34 @@ export async function fetchUserProfile(
 
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    log.warn("Instagram fetchUserProfile failed", {
+
+    log.warn("Instagram fetchProfile failed", {
       status: res.status,
-      igsid,
       detail,
     });
 
-    throw new Error(`Instagram user profile lookup failed (HTTP ${res.status}).`);
+    throw new Error(
+      res.status === 401 || res.status === 400
+        ? "The access token was rejected by Instagram. It may be wrong or expired."
+        : `Instagram returned an error (HTTP ${res.status}).`
+    );
   }
 
   const data = (await res.json()) as {
-    id?: string;
-    name?: string;
+    user_id?: string;
     username?: string;
   };
 
   return {
-    id: String(data.id ?? igsid),
-    name: data.name,
+    userId: String(data.user_id ?? ""),
     username: data.username,
   };
 }
+
 /** Result of exchanging a short-lived token for a long-lived one. */
 export interface LongLivedToken {
   accessToken: string;
+
   /** Seconds until the new token expires (typically ~60 days). */
   expiresIn?: number;
 }
@@ -238,40 +244,69 @@ export async function exchangeLongLivedToken(
     client_secret: config.instagramAppSecret,
     access_token: shortLivedToken,
   });
-  const url = `${config.graphBaseUrl}/access_token?${params.toString()}`;
+
+  const url =
+    `${config.graphBaseUrl}/access_token?${params.toString()}`;
+
   const res = await fetch(url);
 
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    log.warn("Instagram token exchange failed", { status: res.status, detail });
+
+    log.warn("Instagram token exchange failed", {
+      status: res.status,
+      detail,
+    });
+
     throw new Error(
       "Could not exchange the token. Check that the short-lived token is valid and the App Secret is correct."
     );
   }
 
-  const data = (await res.json()) as { access_token?: string; expires_in?: number };
+  const data = (await res.json()) as {
+    access_token?: string;
+    expires_in?: number;
+  };
+
   if (!data.access_token) {
-    throw new Error("Instagram did not return a long-lived token.");
+    throw new Error(
+      "Instagram did not return a long-lived token."
+    );
   }
-  return { accessToken: data.access_token, expiresIn: data.expires_in };
+
+  return {
+    accessToken: data.access_token,
+    expiresIn: data.expires_in,
+  };
 }
 
 /**
- * Subscribe this Instagram account to the app's `messages` webhook, so DMs
+ * Subscribe this Instagram account to the app's messages webhook, so DMs
  * start flowing in without the user doing it by hand in the Meta dashboard.
  */
-export async function subscribeWebhook(config: AppConfig): Promise<void> {
-  const url = `${config.graphBaseUrl}/${config.graphApiVersion}/${config.instagramAccountId}/subscribed_apps?subscribed_fields=messages`;
+export async function subscribeWebhook(
+  config: AppConfig
+): Promise<void> {
+  const url =
+    `${config.graphBaseUrl}/${config.graphApiVersion}/${config.instagramAccountId}/subscribed_apps?subscribed_fields=messages`;
+
   const res = await fetch(url, {
     method: "POST",
-    headers: { Authorization: `Bearer ${config.instagramAccessToken}` },
+    headers: {
+      Authorization: `Bearer ${config.instagramAccessToken}`,
+    },
   });
 
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    log.warn("Instagram subscribeWebhook failed", { status: res.status, detail });
+
+    log.warn("Instagram subscribeWebhook failed", {
+      status: res.status,
+      detail,
+    });
+
     throw new Error(
-      `Could not subscribe the account to messages (HTTP ${res.status}). ` +
+      `Could not subscribe the account to messages (HTTP ${res.status}).` +
         "Make sure the Callback URL and verify token are saved in Meta first."
     );
   }
