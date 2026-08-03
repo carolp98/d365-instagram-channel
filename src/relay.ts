@@ -26,18 +26,21 @@ export class Relay {
       message.attachmentUrls.length > 0;
     if (!hasContent) return;
 
-    let link = this.store.get(message.senderId);
+   let link = this.store.get(message.senderId);
     if (!link) {
       const conversationId = await dl.startConversation(this.config);
+      const profile = await ig.fetchUserProfile(this.config, message.senderId);
       link = {
         igsid: message.senderId,
         conversationId,
         lastActivityAt: Date.now(),
+        displayName: profile.name ?? profile.username,
       };
       this.store.set(link);
       log.info("Started Direct Line conversation", {
         igsid: message.senderId,
         conversationId,
+        displayName: link.displayName,
       });
     }
 
@@ -53,7 +56,7 @@ export class Relay {
       link.conversationId,
       message.senderId,
       text,
-      profile.name ?? profile.username
+      link.displayName
     );
     link.lastActivityAt = Date.now();
     this.store.set(link);
