@@ -35,6 +35,7 @@ export class Relay {
         conversationId,
         lastActivityAt: Date.now(),
         displayName: profile.name ?? profile.username,
+        username: profile.username,
       };
       this.store.set(link);
       log.info("Started Direct Line conversation", {
@@ -56,7 +57,8 @@ export class Relay {
       link.conversationId,
       message.senderId,
       text,
-      link.displayName
+      link.displayName,
+      link.username
     );
     link.lastActivityAt = Date.now();
     this.store.set(link);
