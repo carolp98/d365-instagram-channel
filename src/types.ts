@@ -30,6 +30,7 @@ export interface ConversationLink {
   lastActivityAt: number;
    /** The customer's Instagram display name, fetched once when the conversation starts. */
   displayName?: string;
+  username?: string;
 }
 
 /** A Direct Line activity (subset of fields we use). */
