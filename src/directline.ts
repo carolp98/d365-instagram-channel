@@ -79,6 +79,7 @@ export async function sendUserMessage(
           channeltype: "instagram",
           conversationcontext: {
             instagramid: fromId,
+            instagramusername: fromUsername ?? "",
           },
         },
       }),
