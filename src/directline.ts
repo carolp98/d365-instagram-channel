@@ -60,7 +60,8 @@ export async function sendUserMessage(
   conversationId: string,
   fromId: string,
   text: string,
-  fromName?: string
+  fromName?: string,
+  fromUsername?: string
 ): Promise<void> {
   const res = await fetch(
     `${config.directLineBaseUrl}/v3/directline/conversations/${conversationId}/activities`,
